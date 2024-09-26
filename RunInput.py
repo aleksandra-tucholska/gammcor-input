@@ -99,8 +99,16 @@ def parse_basis_content(data):
                 exponents = []
                 k = 0
                 for next_line in selected_lines[i+1:]:
-                    if next_line.startswith(('S', 'P', 'D', 'F','G','H')) or \
-                       i+st+k+3 == nd:
+                    if next_line.startswith(('S', 'P', 'D', 'F','G','H')):
+                        elements_data[elem][block_type]['exponents'].append(exponents)
+                        elements_data[elem][block_type]['coefficients'].append(coefficients)
+                        break
+                    elif i+st+k+2 == nd:
+                        parsed_values = re.findall(r'[\d\.\-Ee\+]+', next_line)
+                        if len(parsed_values) >= 3:
+                            exponents.append(parsed_values[1])
+                            coefficients.append(parsed_values[2])
+                            k+=1
                         elements_data[elem][block_type]['exponents'].append(exponents)
                         elements_data[elem][block_type]['coefficients'].append(coefficients)
                         break
@@ -118,6 +126,7 @@ def parse_basis_content(data):
         for block_name in elements_data[elem]['blocks']:
             sorted_data= sort_and_index(elements_data[elem][block_name]['exponents'], elements_data[elem][block_name]['coefficients'])
             elements_data[elem][block_name]['exp'] = sorted_data['exp']
+            elements_data[elem][block_name]['num_prim'] = len(elements_data[elem][block_name]['exp'])
             elements_data[elem][block_name]['contractions'] = sorted_data['contractions']
             elements_data[elem][block_name]['idx'] = sorted_data['idx']
             del elements_data[elem][block_name]['coefficients']
@@ -173,47 +182,88 @@ def format_dalton(data, elements_data):
 
     geometry = data['geometry']
 
-    for elem in geometry:
-        print('elllem', elem, geometry[elem])
-        this_atom = ""
-        ln = len(geometry[elem]['coordinates'])
-        for i, coord_list in enumerate(geometry[elem]['coordinates']):
-            spaces_needed = 9 - len( coord_list[0].split('.')[0])
-            mini = f"{elem}" + ' '*spaces_needed
-            
-            for coord in coord_list:
-                if len(coord.split('.')[0]) > 6:
-                    print('INCORRECT GEOMETRY FORMAT, EXITING\n')
-                    sys.exit(1)
-                    
-                mini += coord +' ' * 5 
-            this_atom += mini+'\n'
-        print(this_atom)
-        dalton_formatted+= this_atom
-        for block_name in elements_data[elem]['blocks']:
-            mx = elements_data[elem][block_name]['num_prim']
-            bl = elements_data[elem][block_name]['num_contr']
-            dalton_formatted += f"H  {mx}    {bl}\n"
-            for ln in range(0, mx):
-                exp = elements_data[elem][block_name]['exponents'][ln] 
-                stline = f"    {exp}"
-                offset = " " * len(stline)                
-                current_line = offset
-                line = ""
-                for x in range(0, bl):
-                    
-                    coef = elements_data[elem][block_name]['coefficients'][x][ln]
-                    if len(current_line + f"     {coef}") > 80:
-                        line = deepcopy(current_line) + "\n"
-                        current_line = offset + f"     {coef}"
-                    else:
+    atomdict = {}
+    
+    for i, elem in enumerate(geometry):
+        if elem['atom'] not in atomdict.keys():
+            atomdict[elem['atom']] = [i]
+        else:
+            atomdict[elem['atom']].append(i)
 
-                        current_line += f"     {coef}"
-                line += current_line
-                    
-                line += "\n"
-                line = f"    {exp}     " + line.lstrip()
-                dalton_formatted += line
+    new_geom = []
+    for elem in atomdict:
+        for i in range(0, len(atomdict[elem])):
+            new_geom.append(geometry[atomdict[elem][i]])
+
+    geometry = new_geom
+    basis_for_this_atom = []
+
+    for atom in atomdict:
+        instances = len(atomdict[atom])
+
+    k = 0
+    for dct in geometry:
+        elem = dct['atom']
+
+        instances = len(atomdict[elem])
+
+
+        bl = len(elements_data[elem]['blocks'])
+        block_string = f"{bl}"
+        for kk in range(0, bl):
+            block_string += " 1"
+        
+        this_atom = ""
+
+        if k==0:
+            this_atom += f"Charge={dct['atomic_number']:.1f} Atoms={instances} Blocks={block_string} \n"
+        dct['coordinates'] = [f"{coord:.6f}" for coord in dct['coordinates']]
+
+        spaces_needed = 9 - len(dct['coordinates'][0].split('.')[0])
+
+        mini = f"{elem}" + ' '*spaces_needed
+        for coord in dct['coordinates']:
+            mini += coord +' ' * 5
+        this_atom += mini+'\n'
+        dalton_formatted+= this_atom
+        basis_for_this_atom = ""
+        k+=1
+        if  k == instances: 
+            k = 0
+            for block_name in elements_data[elem]['blocks']:
+                mx = elements_data[elem][block_name]['num_prim']
+
+                bl = elements_data[elem][block_name]['num_contr']
+                dalton_formatted += f"H  {mx}    {bl}\n"
+                for ln in range(0, mx):
+
+                    exp = elements_data[elem][block_name]['exp'][ln]
+                    first_offset = " " *5
+                    current_line = ""
+                    line = ""
+                    for x in range(0, bl):
+                        coef = elements_data[elem][block_name]['contractions'][x]
+                        coef_idx = elements_data[elem][block_name]['idx'][x]
+
+
+                        if ln in coef_idx:
+
+                            index = coef_idx.index(ln)
+                            part = f"{float(coef[index]):>20.6E}"
+                        else:
+                            part = f"{float(0.000000):>20.6E}"
+
+                        if len(current_line + part) > 80:
+                            line = deepcopy(current_line) + "\n"
+                            offset = " "* 20 + first_offset
+                            current_line = offset + part
+                        else:
+                            current_line += part
+
+                    line += current_line
+                    line += "\n"
+                    line = f"{first_offset}{float(exp):>15.6E}" + line
+                    dalton_formatted += line
     
     
     return dalton_formatted
@@ -322,7 +372,7 @@ def parse_dalton(input_file):
         sys.exit(1)
 
     dalton_block = dalton_match.group(1).strip()
-    print(dalton_block)
+
 
 
     dalton_data = {}
@@ -347,7 +397,7 @@ def parse_dalton(input_file):
             sys.exit(1)
     else:
         symmetry = 1
-    print('sym', symmetry)
+
 
     
     if multip_match:
@@ -395,7 +445,7 @@ def parse_dalton(input_file):
         'cas': cas,
         'state': state
     }
-    print('ladladf', dalton_data['symmetry'])
+
     return dalton_data
 
 def parse_input_file(input_file):
@@ -508,7 +558,7 @@ def create_dalton_input(data, dalton_data, elements_data):
     content = content.format(
         symmetry=dalton_data['symmetry'],
         spin_mul=dalton_data['mult'],
-        inactive=' '.join(map(str, dalton_data['inactive'])),  # Konwersja listy do stringa
+        inactive=' '.join(map(str, dalton_data['inactive'])), 
         electrons=dalton_data['electrons'],
         cas=dalton_data['cas'],
         state=dalton_data['state']
@@ -535,11 +585,9 @@ def create_dalton_input(data, dalton_data, elements_data):
         f.write("INTGRL\n")
         f.write(f"{basis} basis set\n")
         f.write("Generated by Python script\n")
-        f.write(f"Atomtypes={atomtypes} Generators=0 0 Integrals=1.00D-15\n")
-        #f.write(f"Charge={charge} Angstrom\n")
+        f.write(f"Atomtypes={atomtypes} Generators=0 0 {data['units']} Integrals=1.00D-15\n")
         f.write(dalton_basis)
         f.write("\n")
-#        f.write(geometry)
 
 
 def main():
@@ -566,7 +614,7 @@ def main():
             for l in range(0, len(block['contractions'])):
                 print('kontrakcja', l+1, block['contractions'][l], block['idx'][l])
             print('')
-    sys.exit(0)
+
     
 
     if data['interface'] == 'DALTON':

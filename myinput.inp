@@ -10,7 +10,7 @@ Calculation
  TwoMoInt   FOFO
  NBasis 42
  Triplet False
- basis aug-cc-pvtz
+ basis cc-pvdz
 end
 
 
@@ -31,17 +31,22 @@ end
 charge = 0
 
 xyz
- Ne 0.5345 12.345 1.0
-  Ne 0.45E+3 0.0 1.3	
-He 0.0 0.3 0.2
+C    0.00000000    0.000000  0.668190
+C    0.00000000    0.000000 -0.668188
+H  0.00000000    0.923274        1.238289
+H  0.00000000   -0.923274        1.238289
+H  0.00000000    0.923274       -1.238289
+H  0.00000000   -0.923274       -1.238289
 end
+
+units a
 
 dalton
 nsym 1
 symmetry 1
 multip 1
-inactive 1 
-electrons 2
-cas 14
+inactive 6
+electrons 4
+cas 4
 state 1
 end	
