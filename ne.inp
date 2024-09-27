@@ -1,0 +1,48 @@
+
+gammcor_path /home/aleksandra.tucholska/test/gammcor
+dalton_path /home/michalhapka/dalton-private/build_ifort_sequential/dalton
+
+
+Calculation
+ JobTitle   AC
+ Interface  DALTON
+ JobType  AC
+ RDMType    CAS
+ TwoMoInt   FOFO
+ NBasis 42
+ Triplet False
+ basis cc-pvdz
+end
+
+
+System
+ ZNucl   10
+ Charge  0
+ ThrSelAct    1.d-4
+ ThrQVirt      1.D-4
+end
+
+Choleskyblock
+ Cholesky OTF
+  Cholesky_Accuracy DEFAULT
+ / TIGHT / LUDICROUS
+end
+
+
+charge = 0
+
+xyz
+Ne
+end
+
+units a
+
+dalton
+nsym 1
+symmetry 1
+multip 1
+inactive 1
+electrons 8
+cas 8
+state 1
+end	

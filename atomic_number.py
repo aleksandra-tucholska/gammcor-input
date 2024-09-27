@@ -1,4 +1,7 @@
 
+
+angular_momentum_dict = {'S':0, 'P':1, 'D':2, 'F':3, 'G':4, 'H':5}
+
 elements_dict = {
     'H': 1, 'HE': 2, 'LI': 3, 'BE': 4, 'B': 5, 'C': 6, 'N': 7, 
     'O': 8, 'F': 9, 'NE': 10, 'NA': 11, 'MG': 12, 'AL': 13, 'SI': 14, 
@@ -36,8 +39,10 @@ elements_short = {
     'SODIUM': 'NA',
     'MAGNESIUM': 'MG',
     'ALUMINIUM': 'AL',
+    'ALUMINUM': 'AL',
     'SILICON': 'SI',
     'PHOSPHORUS': 'P',
+    'PHOSPHOROUS': 'P',
     'SULFUR': 'S',
     'CHLORINE': 'CL',
     'ARGON': 'AR',
