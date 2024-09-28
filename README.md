@@ -170,4 +170,4 @@ project_paths = {
 
 The script supports multiple interfaces (DALTON, MOLPRO, ORCA), but currently, only DALTON is fully implemented.
 
-This README provides an overview of the input file structure and the key data structures used in the quantum chemistry calculations input parser. Users can refer to this document to understand how to format their input files and what to expect in the parsed data structures.
+This README provides an overview of the input file structure and the key data structures used in the quantum chemistry calculations input parser. 
