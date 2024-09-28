@@ -1,4 +1,4 @@
-# Quantum Chemistry Input Parser
+# Gammcor Input Parser
 
 This README describes the input format and key data structures used in the quantum chemistry calculations input parser.
 
