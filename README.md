@@ -1,6 +1,6 @@
 # Gammcor Input Parser
 
-This README describes the input format and key data structures used in the quantum chemistry calculations input parser.
+This README describes the input format and key data structures used in the quantum chemistry calculations input parser. Running script gmc.py
 
 ## Table of Contents
 1. [Input File Format](#input-file-format)
